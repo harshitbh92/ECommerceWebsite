@@ -4,8 +4,13 @@ const app=express();  // express app
 const dotenv=require('dotenv').config(); //.env file
 const PORT=process.env.PORT || 4000; //port define
 const authRouter = require("./routes/authRoute");
+const bodyParser = require("body-parser")
 
 dbConnect(); // connecting DB as exported from config>dbConnect.js
+
+app.use(bodyParser.json()); // Parse JSON data
+app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded data
+
 
 app.use("/",(req,res)=>{
     res.send("Hello from Server");
