@@ -1,5 +1,6 @@
 const mongoose = require('mongoose'); // Erase if already required
 const bcrypt = require('bcrypt');
+const { ObjectId } = require('mongodb');
 // Declare the Schema of the Mongo model
 var userSchema = new mongoose.Schema({
     firstname:{
@@ -27,7 +28,24 @@ var userSchema = new mongoose.Schema({
     role:{
         type:String,
         default :"user"
-    }
+    },
+    //to ckeck if a user is blocked
+    isBlocked:{
+        type:Boolean,
+        default:false
+    },
+    cart:{
+        type : Array,
+        default : []
+    },
+    address : [ { type: mongoose.Schema.Types.ObjectId, ref : "Address"}],
+    wishlist : [ { type : mongoose.Schema.Types.ObjectId, ref : "Product"}],
+    refreshToken :{
+        type: String,
+    },
+},
+{
+    timestamps : true,
 });
 
 //encrypt the password using bcrypt

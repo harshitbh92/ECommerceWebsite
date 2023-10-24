@@ -3,6 +3,8 @@
 const { generateToken } = require("../config/jwtToken");
 const User = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
+const { validateMongodbID } = require("../utils/validateMongodbId");
+const { generateRefreshToken } = require("../config/refreshToken");
 //create new users
 const createUser = asyncHandler(async(req,res) => {
         const email = req.body.email;
@@ -84,6 +86,17 @@ const loginUserCtrl = asyncHandler(async (req,res)=>{
         //console.log(email , password);
         const findUser = await User.findOne({email});
         if(findUser && (await findUser.isPasswordMatched(password))){
+                const refreshToken = await generateRefreshToken(findUser?._id);
+                const updateUser = await User.findByIdAndUpdate(
+                        findUser.id,
+                        {
+                                refreshToken: refreshToken,
+
+                        },
+                        {
+                                new:true,
+                        }
+                );
                 res.json({
                         _id : findUser?._id,
                         firstname : findUser?.firstname,
@@ -100,10 +113,11 @@ const loginUserCtrl = asyncHandler(async (req,res)=>{
 
 //update a user
 const updateaUser = asyncHandler(async(req,res)=>{
-        const {id} = req.params;
+        const {_id} = req.user;
+        validateMongodbID(_id);
         try {
                 const updateUser =await User.findByIdAndUpdate(
-                        id,
+                        _id,
                         {
                                 firstname : req?.body?.firstname,
                                 lastname : req?.body?.lastname,
@@ -134,6 +148,7 @@ const getallUser = asyncHandler(async (req,res)=>{
 //get a single user
 const getaUser = asyncHandler(async (req,res)=>{
         const {id} = req.params;
+        validateMongodbID(id);
         try {
                 const getUser = await User.findById(id);
                 res.json({getUser});
@@ -145,6 +160,7 @@ const getaUser = asyncHandler(async (req,res)=>{
 //delete a user
 const DeleteaUser = asyncHandler(async (req,res)=>{
         const {id} = req.params;
+        validateMongodbID(id); 
         try {
                 const DeleteUser = await User.findByIdAndDelete(id);
                 res.json({DeleteUser});
@@ -152,5 +168,53 @@ const DeleteaUser = asyncHandler(async (req,res)=>{
                 throw new Error(error);
         }
 });
-
-module.exports = { createUser, loginUserCtrl, getallUser,getaUser, DeleteaUser, updateaUser };
+//block and unblock a user
+const blockUser =asyncHandler(async(req,res)=>{
+        const {id} = req.params;
+        validateMongodbID(id);
+        try {
+                const block = await User.findByIdAndUpdate(
+                        id,
+                        {
+                                isBlocked:true,
+                        },
+                        {
+                                new:true
+                        }
+                );
+                res.json({
+                        message:"User blocked",
+                });
+        } catch (error) {
+                throw new Error(error);
+        }
+}) ;
+const unblockUser = asyncHandler(async(req,res)=>{
+        const {id} = req.params;
+        validateMongodbID(id);
+        try {
+                const unblock = await User.findByIdAndUpdate(
+                        id,
+                        {
+                                isBlocked:false,
+                        },
+                        {
+                                new:true
+                        }
+                );
+                res.json({
+                        message:"User Unblocked",
+                });
+        } catch (error) {
+                throw new Error(error);
+        }
+});
+module.exports = { createUser,
+         loginUserCtrl,
+          getallUser,
+          getaUser, 
+          DeleteaUser,
+           updateaUser,
+           blockUser,
+           unblockUser 
+};
