@@ -4,7 +4,9 @@ const User = require("../models/userModel");
 const jwt =  require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
 
+//
 const authMiddleware = asyncHandler(async(req,res,next)=>{
+    //req (request), res (response), and next (a callback function to pass control to the next middleware in the chain).
     let token;
     if(req?.headers?.authorization?.startsWith("Bearer"))// "Bearer <token>" so space extracts the token
     {
