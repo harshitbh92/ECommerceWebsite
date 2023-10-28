@@ -3,8 +3,8 @@
 const { generateToken } = require("../config/jwtToken");
 const User = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
-const { validateMongodbID } = require("../utils/validateMongodbId");
 const { generateRefreshToken } = require("../config/refreshToken");
+const validateMongodbID = require("../utils/validateMongodbId");
 //create new users
 const createUser = asyncHandler(async(req,res) => {
         const email = req.body.email;
@@ -85,9 +85,9 @@ const loginUserCtrl = asyncHandler(async (req,res)=>{
         const {email,password} = req.body;
         //console.log(email , password);
         const findUser = await User.findOne({email});
+        //console.log(findUser);
         if(findUser && (await findUser.isPasswordMatched(password))){
                 const refreshToken = await generateRefreshToken(findUser?._id);
-
                 const updateUser = await User.findByIdAndUpdate(
                         findUser.id,
                         {
@@ -120,7 +120,14 @@ const loginUserCtrl = asyncHandler(async (req,res)=>{
 //Handle refresh token
 const handleRefreshToken = asyncHandler(async(req,res)=>{
         const cookie = req.cookies;
-        console.log(cookie);
+        //console.log(cookie);
+        if(!cookie?.refreshToken)
+        {
+                throw new Error("No refresh token in Cookies");
+        }
+        const refreshToken  = cookie.refreshToken;
+        console.log(refreshToken);
+
 });
 //update a user
 const updateaUser = asyncHandler(async(req,res)=>{
@@ -154,7 +161,7 @@ const getallUser = asyncHandler(async (req,res)=>{
         } catch (error) {
                 throw new Error(error);
         }
-})
+});
 
 //get a single user
 const getaUser = asyncHandler(async (req,res)=>{

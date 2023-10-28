@@ -15,7 +15,7 @@ const cookieParser = require('cookie-parser');
 dbConnect(); // connecting DB as exported from config>dbConnect.js
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
-app.use(cookieParser);
+app.use(cookieParser());
 app.use("/api/user", authRouter);
 
 //middlewares after auth
