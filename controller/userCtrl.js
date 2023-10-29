@@ -5,10 +5,11 @@ const User = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
 const { generateRefreshToken } = require("../config/refreshToken");
 const validateMongodbID = require("../utils/validateMongodbId");
+const jwt = require("jsonwebtoken");
 //create new users
 const createUser = asyncHandler(async(req,res) => {
         const email = req.body.email;
-        const findUser = await User.findOne({email : email});
+        const findUser = await User.findOne({email});
         if(!findUser)
         {
             //Create a new User
@@ -20,65 +21,6 @@ const createUser = asyncHandler(async(req,res) => {
             throw new Error("User Already exists");
         }
     });
-//     try {
-//             await User.findOne({email : email}).then(async(user) => {
-//                     if(!user) {
-//                             const newUser = await User.create(req.body);
-//                             return res.json(newUser);
-//                     }       
-//                     else {
-//                             return res.json({
-//                                     msg : "User already exists!",
-//                                     success : false,
-//                             });     
-//                     }}).catch(err => {
-//                             console.log("This is the error ",err);
-//                     });
-            
-//             }
-//      catch(err) {  
-//             console.log("Second err ",err);
-//     }       
-// }
-
-
-// const createUser = async (req,res)=>{
-//     //if user already exists or a new User
-//     const email = req.body.email;
-//     try {
-//         const findUser = await User.findOne({email:email});
-//     if(!findUser)
-//     {
-//         //Create a new User
-//         const newUser = await User.create(req.body);
-//         res.json(newUser);
-//     }
-//     else
-//     {
-//         res.json({
-//             msg : "User Already Exists",
-//             success : false,
-//         });
-//     }
-//     } catch (error) {
-//         console.log("This is the error");
-//         console.log(error);
-//     }
-//     // const findUser = await User.findOne({email:email});
-//     // if(!findUser)
-//     // {
-//     //     //Create a new User
-//     //     const newUser = await User.create(req.body);
-//     //     res.json(newUser);
-//     // }
-//     // else
-//     // {
-//     //     res.json({
-//     //         msg : "User Already Exists",
-//     //         success : false,
-//     //     });
-//     // }
-// };
 
 //to login a user
 const loginUserCtrl = asyncHandler(async (req,res)=>{
@@ -87,7 +29,7 @@ const loginUserCtrl = asyncHandler(async (req,res)=>{
         const findUser = await User.findOne({email});
         //console.log(findUser);
         if(findUser && (await findUser.isPasswordMatched(password))){
-                const refreshToken = await generateRefreshToken(findUser?._id);
+                const refreshToken = await generateRefreshToken(findUser?.id);
                 const updateUser = await User.findByIdAndUpdate(
                         findUser.id,
                         {
@@ -98,7 +40,7 @@ const loginUserCtrl = asyncHandler(async (req,res)=>{
                                 new:true,
                         }
                 );
-                res.cookie("refreshToken",refreshToken,{
+                res.cookie("refreshToken",refreshToken,{//creates cookie named refreshtoken with value "refreshtoken"
                         httpOnly : true,//it means that the cookie is only accessible 
                         //on the server-side and not through JavaScript on the client-side.
                         maxAge : 72*60*60*1000,
@@ -127,15 +69,70 @@ const handleRefreshToken = asyncHandler(async(req,res)=>{
         }
         const refreshToken  = cookie.refreshToken;
         console.log(refreshToken);
+        const user = await User.findOne({refreshToken});
+        if(!user)
+        {
+                throw new Error("No token attached or not found!");
+        }
+        //if token found in cookies and also in db then verify that token
+        jwt.verify(refreshToken,process.env.JWT_SECRET,(err,decoded)=>{
+                // console.log(decoded); --> id is returned
+                if(err || user.id !== decoded.id)
+                {
+                        console.log("Something went wrong!!");
+                }
+                else
+                {
+                        const accessToken = generateToken(user?._id);
+                        res.json({accessToken});
+                }
+        });
+
+        //res.json(user);
 
 });
+
+//logout a user 
+const logoutauser = asyncHandler(async(req,res)=>{
+        const cookie = req.cookies;
+        if(!cookie?.refreshToken)
+        {
+                throw new Error("No token attached!");
+        }
+        const refreshToken = cookie.refreshToken;
+        const user = await User.findOne({refreshToken});
+        if(!user)
+        {
+                res.clearCookie("refreshToken",{
+                        httpOnly :true,
+                        secure : true,
+                });
+                return res.sendStatus(204); // forbidden
+        }
+        await User.findByIdAndUpdate("refreshToken",{
+                refreshToken:"",
+        });
+        res.clearCookie("refreshToken",{
+                httpOnly :true,
+                secure : true,
+        });
+        return res.sendStatus(204); // forbidden
+
+});
+
+
+
+
+
+
+
 //update a user
 const updateaUser = asyncHandler(async(req,res)=>{
-        const {_id} = req.user;
-        validateMongodbID(_id);
+        const {id} = req.user;
+        validateMongodbID(id);
         try {
                 const updateUser =await User.findByIdAndUpdate(
-                        _id,
+                        id,
                         {
                                 firstname : req?.body?.firstname,
                                 lastname : req?.body?.lastname,
@@ -235,5 +232,6 @@ module.exports = { createUser,
            updateaUser,
            blockUser,
            unblockUser, 
-           handleRefreshToken
+           handleRefreshToken,
+           logoutauser,
 };

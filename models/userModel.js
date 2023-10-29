@@ -51,7 +51,8 @@ var userSchema = new mongoose.Schema({
 //encrypt the password using bcrypt
 userSchema.pre('save', async function(next){ //pre means that it will run before a 
     //document of the userSchema model is saved to the database
-    //next(): This is a callback function that must be called at the end of the middleware to signal that the middleware
+    //next(): This is a callback function that must be called at
+    // the end of the middleware to signal that the middleware
     // has completed its task and the save operation can continue. 
     //It allows the document to proceed with the save operation,
     // ensuring that the hashed password is saved in the database.
