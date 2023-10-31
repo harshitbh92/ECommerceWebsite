@@ -4,10 +4,11 @@ const app=express();  // express app
 const dotenv=require('dotenv').config(); //.env file
 const PORT=process.env.PORT || 4000; //port define
 const authRouter = require("./routes/authRoute");
+const productRouter = require("./routes/productRoute");
 const bodyParser = require('body-parser');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 const cookieParser = require('cookie-parser');
-
+const morgan = require('morgan');
 // async () => {
 //     await dbConnect();
 // };
@@ -16,7 +17,11 @@ dbConnect(); // connecting DB as exported from config>dbConnect.js
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
+//for User 
 app.use("/api/user", authRouter);
+//for Product 
+app.use("/api/product",productRouter);
+
 
 //middlewares after auth
 app.use(notFound);
