@@ -8,12 +8,15 @@ const productRouter = require("./routes/productRoute");
 const bodyParser = require('body-parser');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 const cookieParser = require('cookie-parser');
-const morgan = require('morgan');
+const morgan = require('morgan'); // to see a requests made in the console.
 // async () => {
 //     await dbConnect();
 // };
 // //();
 dbConnect(); // connecting DB as exported from config>dbConnect.js
+
+app.use(morgan("dev"));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
