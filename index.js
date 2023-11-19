@@ -14,7 +14,6 @@ const morgan = require('morgan'); // to see a requests made in the console.
 // };
 // //();
 dbConnect(); // connecting DB as exported from config>dbConnect.js
-
 app.use(morgan("dev"));
 
 app.use(bodyParser.json());
@@ -35,5 +34,6 @@ app.use(errorHandler);
 // });
 
 app.listen(PORT,()=>{
-    console.log("Server is running at port " +PORT);
+    console.log(`Server is running at port ${PORT}`);
+
 });

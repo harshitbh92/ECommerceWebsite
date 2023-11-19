@@ -67,13 +67,68 @@ const getaProduct  = asyncHandler(async(req,res)=>{
 const getallproducts = asyncHandler(async(req,res)=>{
     // console.log(req.query);
     try {
-        // const getProducts = await Product.find(req.query); //for filtering this can be used too
-        const getProducts = await Product.find();
-        res.json(getProducts);
+        // // const getProducts = await Product.find(req.query); //for filtering this can be used too
+
+        //FILTERING
+        const queryObj = {...req.query};
+        const excludefields = ['page','sort','limit','fields'];
+        excludefields.forEach((el)=> delete queryObj[el]);
+
+       
+        let queryStr = JSON.stringify(queryObj);
+        queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`); //->g is needed so that it matches for all if g was not there it matched with only one
+        console.log(JSON.parse(queryStr));
+        let query = Product.find(JSON.parse(queryStr));
+        
+        // console.log(query);
+        
+
+       
+        
+        //sorting
+        if(req.query.sort)
+        {
+            const sortBy = req.query.sort.split(",").join(" ");
+            query = query.sort(sortBy);
+        }
+        else
+        {
+            query = query.sort("-createdAt");
+        }
+        //const getProducts = await Product.find();
+        //res.json(getProducts);
+        
+        //limiting fields
+        if(req.query.fields)
+        {
+            const fields = req.query.fields.split(",").join(" ");
+            query = query.select(fields); 
+        }
+        else{
+            query = query.select("__v");
+        }
+
+        // //pagination
+        // const page = req.query.page;
+        // const limit = req.query.limit;
+        // const skip = (page-1)*limit;
+        // query = query.skip(skip).limit(limit);
+        // if(req.query.page){
+        //     const productCount = await Product.countDocuments();
+        //     if(skip>=productCount)
+        //     {
+        //         throw new Error("This page does not exist!!");
+        //     }
+        // }
+
+
+        const product = await query;
+        res.json(product);
+        
     } catch (error) {
         throw new Error(error);
     }
-})
+});
 
 
 
