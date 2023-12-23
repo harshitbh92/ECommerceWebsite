@@ -71,7 +71,8 @@ const getallproducts = asyncHandler(async(req,res)=>{
         excludefields.forEach((el)=> delete queryObj[el]);
 
         let queryStr = JSON.stringify(queryObj);
-        queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`); //->g is needed so that it matches for all if g was not there it matched with only one
+        queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`); //->/g is needed so that it matches for all if g was not there it matched with only one
+        //refer to replace() in Javascript 
         let query = Product.find(JSON.parse(queryStr));
 
         // sorting
@@ -125,4 +126,11 @@ module.exports = {
                     getallproducts,
                     updateaProduct,
                     deleteaproduct
+                }
+
+
+
+
+                const getData = (name) =>{
+                    console.log(name);
                 }

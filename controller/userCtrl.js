@@ -1,11 +1,13 @@
 //LOGIN CONTROLLER
 //require user models
-const { generateToken } = require("../config/jwtToken");
+const { generateToken } = require("../config/jwtToken"); 
 const User = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
 const { generateRefreshToken } = require("../config/refreshToken");
 const validateMongodbID = require("../utils/validateMongodbId");
 const jwt = require("jsonwebtoken");
+const sendEmail = require("./emailCtrl");
+// const sendEmail= require("../controller/emailCtrl");
 //create new users
 const createUser = asyncHandler(async(req,res) => {
         const email = req.body.email;
@@ -224,6 +226,65 @@ const unblockUser = asyncHandler(async(req,res)=>{
                 throw new Error(error);
         }
 });
+
+
+const updatePassword = asyncHandler(async (req, res) => {
+        try {
+            const { id } = req.user;
+            const { password } = req.body; // Use destructuring to get the password from req.body
+            validateMongodbID(id);
+            
+            // Use await to ensure that the User.findById() resolves to a user object
+            const user = await User.findById(id);
+    
+            if (user) {
+                // Update the password only if it's provided in the request body
+                if (password) {
+                    user.password = password;
+                    const updatedUser = await user.save();
+                    res.json(updatedUser);
+                } else {
+                    res.status(400).json({ error: 'Password is required for update' });
+                }
+            } else {
+                // Handle the case where the user is not found
+                res.status(404).json({ error: 'User not found' });
+            }
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    });
+
+    const forgotPasswordToken = asyncHandler(async (req, res) => {
+        try {
+            const { email } = req.body;
+            const user = await User.findOne({ email });
+    
+            if (!user) {
+                throw new Error("User does not exist or Email not registered!");
+            }
+    
+            const token = await user.createPasswordResetToken();
+            await user.save();
+    
+            const resetURL = `Hi, Please follow this link to reset your password. Note : This link is valid only 
+                for 10 minutes. <a href='http://localhost:5000/api/user/reset-password/${token}'>Click Here</a>`;
+    
+            const data = {
+                to: email,
+                subject: "Forgot Password-> Reset Password",
+                text: "Hey User",
+                html: resetURL,
+            };
+    
+            sendEmail(data);
+            res.json(token);
+        } catch (error) {
+            throw new Error(error);
+        }
+    });
+    
 module.exports = { createUser,
          loginUserCtrl,
           getallUser,
@@ -234,4 +295,6 @@ module.exports = { createUser,
            unblockUser, 
            handleRefreshToken,
            logoutauser,
+           updatePassword,
+           forgotPasswordToken
 };

@@ -62,6 +62,8 @@ userSchema.pre('save', async function(next){ //pre means that it will run before
     // ensuring that the hashed password is saved in the database.
 
     if(!this.isModified("password")){
+        //for the update password if password is modified then we nwwd to encrypt it 
+        //if not modified no need to encrypt hence "next()""
         next();
     }
 
@@ -70,13 +72,23 @@ userSchema.pre('save', async function(next){ //pre means that it will run before
 });
 
 //now to ckeck the enetered password to original decrypt it
-userSchema.methods.isPasswordMatched = async function(enteredPassword){
+userSchema.methods.isPasswordMatched = async function(enteredPassword){ //adds method isPasswordMatched to the userSchema
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
+
+//-------For Forgot Password----
+//it generates a random password reset token, hashes it, stores it in the user model along with an expiration timestamp, 
+//and returns the unhashed token for potential use in communication with the user
 userSchema.methods.createPasswordResetToken = async function(){
     const resetToken = crypto.randomBytes(32).toString("hex");
-    this.passwordResetToken = crypto.createHash('sha256')
+    //this line generates a random 32bit string which is converted to hexadecimal and this will be used 
+    //as actual token for reset of the password
+    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest("hex");
+    //creates a hash object for the sha-256 algo and the updates this object with the resetToken
+    this.passwordResetExpires = Date.now() + 30*60*1000; //10 minutes
+    //This line sets the passwordResetExpires field to a timestamp representing the expiration time of the password reset token
+    return resetToken;
 }
 
 //Export the model
