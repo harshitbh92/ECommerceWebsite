@@ -1,4 +1,6 @@
 //Schema of a product
+//type !mdg and press enter to get basic Schema Structure
+
 const mongoose = require('mongoose'); 
 const User = require("./userModel")
 // Declare the Schema of the Mongo model

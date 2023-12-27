@@ -1,3 +1,4 @@
+//type !mdg and press enter to get basic Schema Structure
 const mongoose = require('mongoose'); // Erase if already required
 const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb');

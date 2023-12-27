@@ -5,6 +5,8 @@ const dotenv=require('dotenv').config(); //.env file
 const PORT=process.env.PORT || 4000; //port define
 const authRouter = require("./routes/authRoute");
 const productRouter = require("./routes/productRoute");
+const blogRouter = require('./routes/blogRoute');
+const categoryRouter = require('./routes/ProdcategoryRoute');
 const bodyParser = require('body-parser');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 const cookieParser = require('cookie-parser');
@@ -23,6 +25,11 @@ app.use(cookieParser());
 app.use("/api/user", authRouter);
 //for Product 
 app.use("/api/product",productRouter);
+//for Blog
+app.use("/api/blog", blogRouter);
+//for category
+app.use("/api/category",categoryRouter);
+
 
 
 //middlewares after auth

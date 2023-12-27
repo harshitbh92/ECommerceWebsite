@@ -4,9 +4,9 @@ const { generateToken } = require("../config/jwtToken");
 const User = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
 const { generateRefreshToken } = require("../config/refreshToken");
-const validateMongodbID = require("../utils/validateMongodbId");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("./emailCtrl");
+const crypto = require("crypto");
 // const sendEmail= require("../controller/emailCtrl");
 //create new users
 const createUser = asyncHandler(async(req,res) => {
@@ -285,6 +285,55 @@ const updatePassword = asyncHandler(async (req, res) => {
         }
     });
     
+    const resetPassword = asyncHandler(async (req, res) => {
+        try {
+            const { password } = req.body;
+            const { token } = req.params;
+            const hashToken = crypto.createHash('sha256').update(token).digest("hex");
+    
+            // Use await with User.findOne to ensure it returns a promise
+            const user = await User.findOne({
+                passwordResetToken: hashToken,
+                passwordResetExpires: { $gt: Date.now() },
+            });
+    
+            if (!user) {
+                throw new Error("Token Expired! Please try Again!!");
+            }
+    
+            // Update user properties
+            user.password = password;
+            user.passwordResetToken = undefined; // Correct syntax to update fields
+            user.passwordResetExpires = undefined; // Correct syntax to update fields
+    
+            // Save the user document
+            await user.save();
+    
+            res.json(user);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    });
+    
+//     const resetPassword = asyncHandler(async(req,res)=>{
+//         const {password} = req.body;
+//         const {token} = req.params;
+//         const hashToken = crypto.createHash('sha256').update(token).digest("hex"); 
+//         const user = User.findOne({
+//                 passwordResetToken : hashToken,
+//                 passwordResetExpires : { $gt : Date.now()},
+//         });
+//         if(!user)
+//         {
+//                 throw new Error("Token Expired! Please try Again!!");
+//         }
+//         user.password = password;
+//         passwordResetToken : undefined;
+//         passwordResetExpires : undefined;
+//         await user.save();
+//         res.json(user);
+//     });
 module.exports = { createUser,
          loginUserCtrl,
           getallUser,
@@ -296,5 +345,6 @@ module.exports = { createUser,
            handleRefreshToken,
            logoutauser,
            updatePassword,
-           forgotPasswordToken
+           forgotPasswordToken,
+           resetPassword,
 };
