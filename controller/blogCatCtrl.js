@@ -1,11 +1,10 @@
-const prodCategory = require("../models/ProdCategoryModel");
-const User = require('../models/userModel');
+const blogCategory = require("../models/BlogCatModel");
 const asyncHandler = require("express-async-handler");
 const validateMongodbID = require("../utils/validateMongodbId");
 
-const createCategory = asyncHandler(async (req, res) => {
+const createblogCategory = asyncHandler(async (req, res) => {
     try {
-      const newCategory = await prodCategory.create(req.body);
+      const newCategory = await blogCategory.create(req.body);
       res.json(newCategory);
     } catch (error) {
       throw new Error(error);
@@ -13,11 +12,11 @@ const createCategory = asyncHandler(async (req, res) => {
   });
 
 
-const updateCategory = asyncHandler(async(req,res)=>{
+const updateblogCategory = asyncHandler(async(req,res)=>{
     const {id} = req.params;
     validateMongodbID(id);
     try {
-        const updatedCategory = await prodCategory.findByIdAndUpdate(id, req.body, 
+        const updatedCategory = await blogCategory.findByIdAndUpdate(id, req.body, 
             {
                 new:true,
             });
@@ -27,39 +26,39 @@ const updateCategory = asyncHandler(async(req,res)=>{
     }
 });
  
-const deleteCategory = asyncHandler(async(req,res)=>{
+const deleteblogCategory = asyncHandler(async(req,res)=>{
     const {id}= req.params;
     validateMongodbID(id);
     try {
-        const deletedCategory =await prodCategory.findByIdAndDelete(id);
+        const deletedCategory =await blogCategory.findByIdAndDelete(id);
         res.json(deletedCategory);
     } catch (error) {
         throw new Error(error);
     }
 });
 
-const getCategory = asyncHandler(async(req,res)=>{
+const getblogCategory = asyncHandler(async(req,res)=>{
     const {id}= req.params;
     try {
-        const allcategories = await prodCategory.findById(id);
+        const allcategories = await blogCategory.findById(id);
         res.json(allcategories);
     } catch (error) {
         throw new Error(error);
     }
 });
 
-const getallCategory =  asyncHandler(async(req,res)=>{
+const getallblogCategory =  asyncHandler(async(req,res)=>{
     try {
-        const allcategories = await prodCategory.find();
+        const allcategories = await blogCategory.find();
         res.json(allcategories);
     } catch (error) {
         throw new Error(error);
     }
 })
 module.exports ={
-    createCategory,
-    updateCategory,
-    deleteCategory,
-    getCategory,
-    getallCategory,
+    createblogCategory,
+    updateblogCategory,
+    deleteblogCategory,
+    getblogCategory,
+    getallblogCategory,
 }
