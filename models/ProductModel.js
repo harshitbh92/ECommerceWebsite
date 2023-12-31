@@ -48,11 +48,18 @@ var productSchema = new mongoose.Schema({
         type: String,
         required : true,
     },
-    ratings:{
+    ratings:[
+        {
         star:Number,
         postedby : { type : mongoose.Schema.Types.ObjectId, ref:User},
 
     },
+],
+totalrating: {
+    type: String,
+    default: 0,
+  },
+
 },
 {
     timestamps : true,
