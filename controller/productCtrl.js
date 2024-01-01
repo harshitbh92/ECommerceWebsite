@@ -216,6 +216,11 @@ const addToWishlist = asyncHandler(async (req, res) => {
   }); 
 
 
+const uploadImages = asyncHandler(async(req,res)=>{
+  
+})
+
+
 
 module.exports = {
                     createProduct,
@@ -225,6 +230,6 @@ module.exports = {
                     deleteaproduct,
                     addToWishlist,
                     rating,
-
+                    uploadImages,
 
                 }
