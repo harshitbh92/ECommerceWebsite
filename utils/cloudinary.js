@@ -7,13 +7,13 @@ cloudinary.config({
 
 const cloudinaryImgUpload = async(filestoupload)=>{
     return new Promise((resolve)=>{
-        cloudinary.UploadStream.upload(filestoupload, (result)=>{
+        cloudinary.uploader.upload(filestoupload, (result)=>{
             resolve(
                 {
                     url : result.secure_url,
                 },
                 {
-                    resource_type : auto,
+                    resource_type : "auto",
                 }
             );
         });
