@@ -2,6 +2,8 @@
 //require user models
 const { generateToken } = require("../config/jwtToken"); 
 const User = require("../models/userModel");
+const Product = require("../models/ProductModel");
+const Cart = require("../models/cartModel");
 const asyncHandler = require("express-async-handler");
 const { generateRefreshToken } = require("../config/refreshToken");
 const jwt = require("jsonwebtoken");
@@ -378,16 +380,49 @@ const updatePassword = asyncHandler(async (req, res) => {
 //         res.json(user);
 //     });
 
-
+//wishlist of products links to ---> ProductCtrl Wishlist
 const getWishlist = asyncHandler(async(req,res)=>{
         const {_id} = req.user;
+        validateMongodbID(_id);
         try {
                 const findUser = await User.findById(_id).populate("wishlist");
                 res.json(findUser);
         } catch (error) {
                 throw new Error(error);
         }
-})
+});
+
+
+//save address of user
+const saveAddress = asyncHandler(async(req,res)=>{
+        const {_id} = req.user;
+        try {
+                const newaddruser = await User.findByIdAndUpdate(_id,
+                        {
+                                address : req?.body?.address,
+                        },
+                        {
+                                new:true,
+                        });
+                res.json(newaddruser);
+        } catch (error) {
+                throw new Error(error);
+        }
+});
+
+const userCart = asyncHandler(async(req,res)=>{
+        const {cart} = req.body;
+        const {_id} = req.user;
+        validateMongodbID(_id);
+        try {
+                const user = await User.findById(_id);
+                //if user already has the product in cart
+                
+
+        } catch (error) {
+                throw new Error(error);
+        }
+});
 
 module.exports = { createUser,
          loginUserCtrl,
@@ -404,4 +439,7 @@ module.exports = { createUser,
            resetPassword,
            adminLogin,
            getWishlist,
+           saveAddress,
+           userCart,
+
 };
