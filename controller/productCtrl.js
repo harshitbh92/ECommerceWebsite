@@ -217,7 +217,7 @@ const addToWishlist = asyncHandler(async (req, res) => {
 
 
 const uploadImages = asyncHandler(async(req,res)=>{
-  
+  console.log(req.files);
 })
 
 

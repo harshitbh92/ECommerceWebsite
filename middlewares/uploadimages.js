@@ -1,84 +1,72 @@
 const multer = require("multer");
-//multer is a popular middleware for handling multipart/form-data, 
-//which is often used when working with file uploads
-const sharp = require("sharp");
+// const sharp = require("sharp");
+const Jimp = require('jimp');
 const path = require("path");
-
-//how files are stord on server
-const mulerStorage  = multer.diskStorage({
-    destination : function(req,file,cb)//cb is a callback function
-    {
-        cb(null,path.json(__dirname,"../public/images")); // path where the destination file will be stored
-    }, 
-    filename : function(req,file,cb)
-    {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() *1e9);
-        cb(null , file.fieldname + "-" +uniqueSuffix + ".jpeg"); 
-        //unique filename -> originalfilename + date + as random number
-    }
+const fs = require("fs");
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, "../public/images/"));
+  },
+  filename: function (req, file, cb) {
+    const uniquesuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + "-" + uniquesuffix + ".jpeg");
+  },
 });
 
-const mulerFilter = (req,file,cb)=>{
-    if(file.mimeType.startswith("image"))
-    {
-        cb(null,true);
-    }else{
-        cb(
-            {
-            message : "Unsupported File Format",
-            },
-            false
-        );
-    }
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image")) {
+    cb(null, true);
+  } else {
+    cb({ message: "Unsupported file format" }, false);
+  }
 };
-
 
 const uploadPhoto = multer({
-    storage : mulerStorage,
-    fileFilter : mulerFilter,
-    limlits : { fieldSize : 2000000 }
+  storage: storage,
+  fileFilter: multerFilter,
+  limits: { fileSize: 1000000 },
 });
 
 
-//resize the image and ssave it in the directory
-const productImgResize = async(req,res,next)=>{
-    if(!req.files)
-    {
-        return next();
-    }
-    await Promise.all(
-        req.files.map(async (file)=>{
-            await sharp(file.path)
-            .resize(300,300)
-            .toFormat("jpeg")
-            .jpeg({quality : 90})
-            .toFile(`public/images/products/${file.filename}`);
-        })
-    );
-    next();
+
+const productImgResize = async (req, res, next) => {
+  if (!req.files) return next();
+  await Promise.all(
+    req.files.map(async (file) => {
+      const image = await Jimp.read(file.path);
+      await image
+        .resize(300, 300)
+        .quality(90)
+        .write(`public/images/products/${file.filename}`);
+    })
+  );
+  next();
 };
 
-const blogImgResize = async(req,res,next)=>{
-    if(!req.files)
-    {
-        return next();
-    }
+const blogImgResize = async (req, res, next) => {
+    if (!req.files) return next();
     await Promise.all(
-        req.files.map(async (file)=>{
-            await sharp(file.path)
-            .resize(300,300)
-            .toFormat("jpeg")
-            .jpeg({quality : 90})
-            .toFile(`public/images/blogs/${file.filename}`);
-        })
+      req.files.map(async (file) => {
+        const image = await Jimp.read(file.path);
+        await image
+          .resize(300, 300)
+          .quality(90)
+          .write(`public/images/blogs/${file.filename}`);
+      })
     );
     next();
-};
-
-
-module.exports = {
-    uploadPhoto,
-    productImgResize,
-    blogImgResize
-
-}
+  };
+// const blogImgResize = async (req, res, next) => {
+//   if (!req.files) return next();
+//   await Promise.all(
+//     req.files.map(async (file) => {
+//       await sharp(file.path)
+//         .resize(300, 300)
+//         .toFormat("jpeg")
+//         .jpeg({ quality: 90 })
+//         .toFile(`public/images/blogs/${file.filename}`);
+//     })
+//   );
+//   next();
+// };
+module.exports = { uploadPhoto, productImgResize, blogImgResize };
