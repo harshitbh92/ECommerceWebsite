@@ -61,6 +61,49 @@ const loginUserCtrl = asyncHandler(async (req,res)=>{
         }
 });
 
+//admin login
+const adminLogin = asyncHandler(async (req,res)=>{
+        const {email,password} = req.body;
+        //console.log(email , password);
+        const findadmin = await User.findOne({email});
+        if(findadmin.role !== "admin")
+        {
+                throw new Error("You are not Authorized to carry out this operation");
+        }
+        //console.log(findUser);
+        if(findadmin && (await findadmin.isPasswordMatched(password))){
+                const refreshToken = await generateRefreshToken(findadmin?.id);
+                const updateUser = await User.findByIdAndUpdate(
+                        findadmin.id,
+                        {
+                                refreshToken: refreshToken,
+
+                        },
+                        {
+                                new:true,
+                        }
+                );
+                res.cookie("refreshToken",refreshToken,{//creates cookie named refreshtoken with value "refreshtoken"
+                        httpOnly : true,//it means that the cookie is only accessible 
+                        //on the server-side and not through JavaScript on the client-side.
+                        maxAge : 72*60*60*1000,
+                });
+                res.json({
+                        _id : findadmin?._id,
+                        firstname : findadmin?.firstname,
+                        lastname : findadmin?.lastname,
+                        email : findadmin?.email,
+                        mobile : findadmin?.mobile,
+                        token : generateToken(findadmin?._id),
+                        role : findadmin?.role,
+                });
+        }
+        else{
+                throw new Error("Invalid Credentials");
+        }
+});
+
+
 //Handle refresh token
 const handleRefreshToken = asyncHandler(async(req,res)=>{
         const cookie = req.cookies;
@@ -334,6 +377,18 @@ const updatePassword = asyncHandler(async (req, res) => {
 //         await user.save();
 //         res.json(user);
 //     });
+
+
+const getWishlist = asyncHandler(async(req,res)=>{
+        const {_id} = req.user;
+        try {
+                const findUser = await User.findById(_id).populate("wishlist");
+                res.json(findUser);
+        } catch (error) {
+                throw new Error(error);
+        }
+})
+
 module.exports = { createUser,
          loginUserCtrl,
           getallUser,
@@ -347,4 +402,6 @@ module.exports = { createUser,
            updatePassword,
            forgotPasswordToken,
            resetPassword,
+           adminLogin,
+           getWishlist,
 };
