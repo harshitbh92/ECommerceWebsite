@@ -5,6 +5,7 @@ const User = require("../models/userModel");
 const Product = require("../models/ProductModel");
 const Cart = require("../models/cartModel");
 const Coupon = require("../models/couponModel");
+const Order = require("../models/orderModel");
 const asyncHandler = require("express-async-handler");
 const { generateRefreshToken } = require("../config/refreshToken");
 const jwt = require("jsonwebtoken");
@@ -12,6 +13,7 @@ const sendEmail = require("./emailCtrl");
 const crypto = require("crypto");
 const validateMongodbID = require("../utils/validateMongodbId");
 const { log } = require("console");
+const uniqid = require("uniqid");
 
 // const sendEmail= require("../controller/emailCtrl");
 //create new users
@@ -506,6 +508,91 @@ const applyCoupon = asyncHandler(async(req,res)=>{
         res.json(totalafterDiscount);
 });
 
+
+const createOrder = asyncHandler(async(req,res)=>{
+        const {_id} = req.user;
+        const { COD, appliedCoupon } = req.body;
+        validateMongodbID(_id);
+        try {
+                if(!COD)
+                {
+                        throw new Error("Order Failed!!")
+                }
+                const user = await User.findById(_id);
+                const userCart = await Cart.findOne({orderBy : user?._id});
+                let finalAmount = 0;
+                if(appliedCoupon && userCart.totalafterDiscount)
+                {
+                        finalAmount = userCart.totalafterDiscount;
+                }
+                else{
+                        finalAmount =userCart.cartTotal;
+                }
+                let newOrder = await new Order({
+                        products : userCart.products,
+                        paymentIntent : {
+                                id : uniqid(),
+                                method : "COD",
+                                amount : finalAmount,
+                                status : "Cash On Delivery",
+                                created : Date.now(),
+                                currency : "inr",
+                        },
+                        orderBy : user?._id,
+                        orderStatus : "Cash On Delivery"
+                }).save();
+                //now we need to decrease the quantity and increase sold quantity
+                let update = userCart.products.map((item)=>{
+                        return {
+                                updateOne :{
+                                        filter : {_id : item.product._id},
+                                        update : {$inc : {quantity : -item.count, sold : +item.count}},
+
+                                },
+                        };
+                });
+                const updated = await Product.bulkWrite(update, {});
+                res.json( {message : "success"});
+        } catch (error) {
+                throw new Error(error);
+        }
+});
+
+
+const getOrders = asyncHandler(async(req,res)=>{
+        const {_id} = req.user;
+
+        validateMongodbID(_id);
+        try {
+                const allorders = await Order.findOne({orderBy : _id}).populate("products.product").exec();
+                res.json(allorders);
+        } catch (error) {
+                throw new Error(error);
+        }
+});
+
+const updateOrderStatus = asyncHandler(async (req, res) => {
+        const { status ,paymentStatus} = req.body;
+        const { id } = req.params;
+        validateMongodbID(id);
+        try {
+          const updateOrderStatus = await Order.findByIdAndUpdate(
+            id,
+            {
+              orderStatus: status,
+              paymentIntent: {
+                status: paymentStatus,
+              },
+            },
+            { new: true }
+          );
+          res.json(updateOrderStatus);
+        } catch (error) {
+          throw new Error(error);
+        }
+      });
+
+
 module.exports = { createUser,
          loginUserCtrl,
           getallUser,
@@ -526,6 +613,9 @@ module.exports = { createUser,
            getUserCart,
            emptyCart,
            applyCoupon,
+           createOrder,
+           getOrders,
+           updateOrderStatus,
 
 
 
