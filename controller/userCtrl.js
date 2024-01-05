@@ -449,8 +449,6 @@ const userCart = asyncHandler(async(req,res)=>{
                 throw new Error(error);
         }
 });
-
-
 const getUserCart = asyncHandler(async(req,res)=>{
         const {_id} = req.user;
         validateMongodbID(_id);
@@ -462,31 +460,31 @@ const getUserCart = asyncHandler(async(req,res)=>{
         }
 });
 
-
-const emptyCart = asyncHandler(async (req, res) => {
-        const { _id } = req.user;
+const emptyCart = asyncHandler(async(req,res)=>{
+        const {_id} =req.user;
+        console.log(req.user);
         validateMongodbID(_id);
         try {
-            const user = await User.findOne({ _id });
-    
-            if (!user) {
-                return res.status(404).json({ error: "User not found" });
-            }
-    
-            const cart = await Cart.findOne({ orderby: user._id });
-    
-            if (!cart) {
-                return res.status(404).json({ error: "Cart not found" });
-            }
-    
-            const removedCart = await Cart.findOneAndRemove({ orderby: user._id });
-    
-            res.json(removedCart);
+                const user = await User.findOne(_id);
+                const cart = await Cart.findOneAndRemove({orderBy : user?._id});
+                res.json(cart);
+
         } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: "Internal Server Error" });
+                throw new Error(error);
         }
-    });
+})
+// const emptyCart = asyncHandler(async (req, res) => {
+//         const { _id } = req.user;
+//         validateMongodbID(_id);
+//         try {
+//           const user = await User.findOne({ _id });
+//           const cart = await Cart.findOneAndRemove({ orderBy: user._id });
+//           res.json(cart);
+//         } catch (error) {
+//           throw new Error(error);
+//         }
+//       });
+    
     
 
 module.exports = { createUser,
