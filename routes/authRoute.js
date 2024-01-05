@@ -1,5 +1,5 @@
 const express = require("express"); 
-const { createUser, loginUserCtrl, getallUser, getaUser, DeleteaUser, updateaUser, blockUser, unblockUser, handleRefreshToken, logoutauser, updatePassword, forgotPasswordToken, resetPassword, adminLogin, getWishlist, saveAddress, userCart, getUserCart, emptyCart } = require("../controller/userCtrl");
+const { createUser, loginUserCtrl, getallUser, getaUser, DeleteaUser, updateaUser, blockUser, unblockUser, handleRefreshToken, logoutauser, updatePassword, forgotPasswordToken, resetPassword, adminLogin, getWishlist, saveAddress, userCart, getUserCart, emptyCart, applyCoupon } = require("../controller/userCtrl");
 const { authMiddleware, isAdmin } = require("../middlewares/authMiddleware"); //middlewares
 
 const router = express.Router();
@@ -8,6 +8,7 @@ router.post("/register",createUser); //route to register a user
 router.post("/login", loginUserCtrl);//login a user
 router.post("/adminlogin",adminLogin);//admin Login
 router.post("/cart" ,authMiddleware, userCart);//add to cart
+router.post("/cart/applycoupon", authMiddleware, applyCoupon);
 router.get("/cart",authMiddleware,getUserCart);//get a user's cart
 router.get("/all-users",getallUser);//get all users
 router.get("/refresh",handleRefreshToken);//handling refresh token
