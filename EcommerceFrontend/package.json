@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "start": "node app.js"
+},
+  "dependencies": {
+    "react-icons": "^4.12.0",
+    "react-router-dom": "^6.21.1"
+  }
+}
