@@ -47,3 +47,4 @@ npm start
 * Express.js
 * Bootstrap
 * ui-Router
+* Redux-Toolkit
